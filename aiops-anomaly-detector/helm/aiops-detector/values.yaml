@@ -1,0 +1,52 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/Pa123313/aiops-anomaly-detector
+  pullPolicy: IfNotPresent
+  tag: ""  # overridden by CI with git SHA
+
+serviceAccount:
+  create: true
+  name: "aiops-detector"
+
+service:
+  type: ClusterIP
+  port: 8000
+
+config:
+  lokiUrl:         "http://loki:3100"
+  ollamaUrl:       "http://ollama:11434"
+  ollamaModel:     "llama3"
+  alertmanagerUrl: "http://alertmanager:9093"
+  scanInterval:    "300"
+  logLookback:     "5"
+  lokiQuery:       '{namespace="production"}'
+  anomalyThreshold: "0.7"
+
+resources:
+  requests:
+    cpu:    "100m"
+    memory: "128Mi"
+  limits:
+    cpu:    "500m"
+    memory: "512Mi"
+
+# Prometheus scrape annotation
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port:   "8000"
+  prometheus.io/path:   "/metrics"
+
+livenessProbe:
+  httpGet:
+    path: /metrics
+    port: 8000
+  initialDelaySeconds: 15
+  periodSeconds: 30
+
+readinessProbe:
+  httpGet:
+    path: /metrics
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 10

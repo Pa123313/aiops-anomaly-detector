@@ -1,0 +1,9 @@
+apiVersion: v2
+name: aiops-detector
+description: LLM-powered log anomaly detection — Helm chart
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: Pavithra A S
+    email: Pavithraannur1234@gmail.com

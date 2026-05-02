@@ -1,0 +1,101 @@
+version: "3.9"
+
+services:
+
+  # ── LLM Engine ──────────────────────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ── Pull LLaMA3 model on first start ────────────────────────────────────────
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: ollama-init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["ollama", "pull", "llama3"]
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    restart: "no"
+
+  # ── AIOps Detector ──────────────────────────────────────────────────────────
+  aiops-detector:
+    build: .
+    container_name: aiops-detector
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      LOKI_URL:          "http://loki:3100"
+      OLLAMA_URL:        "http://ollama:11434"
+      OLLAMA_MODEL:      "llama3"
+      ALERTMANAGER_URL:  "http://alertmanager:9093"
+      SCAN_INTERVAL:     "300"
+      LOG_LOOKBACK:      "5"
+      LOKI_QUERY:        '{namespace="production"}'
+      ANOMALY_THRESHOLD: "0.7"
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  # ── Loki (log storage) ──────────────────────────────────────────────────────
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+
+  # ── Prometheus ──────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.49.1
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=7d'
+
+  # ── Alertmanager ────────────────────────────────────────────────────────────
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+
+  # ── Grafana ─────────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.3.1
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "admin"
+      GF_USERS_ALLOW_SIGN_UP:     "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+    depends_on:
+      - prometheus
+      - loki
+
+volumes:
+  ollama_data:
+  loki_data:
+  grafana_data:

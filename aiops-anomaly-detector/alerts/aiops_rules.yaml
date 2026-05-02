@@ -1,0 +1,33 @@
+groups:
+  - name: aiops_detector_alerts
+    rules:
+
+      # Alert when LLM detects a critical anomaly with high confidence
+      - alert: AIOpsAnomalyDetected
+        expr: aiops_last_anomaly_score >= 0.7
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "AIOps detected a log anomaly"
+          description: "LLM confidence score is {{ $value | humanizePercentage }}. Investigate logs immediately."
+          runbook_url: "https://github.com/Pa123313/aiops-anomaly-detector/blob/main/docs/runbook.md"
+
+      # Alert when detector stops scanning (no scans in 10 minutes)
+      - alert: AIOpsDetectorDown
+        expr: increase(aiops_scans_total[10m]) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "AIOps Anomaly Detector has stopped scanning"
+          description: "No scan cycles detected in the last 10 minutes. Check the detector pod."
+
+      # Alert on high anomaly rate (more than 5 anomalies in 30 minutes)
+      - alert: AIOpsHighAnomalyRate
+        expr: increase(aiops_anomalies_detected[30m]) > 5
+        labels:
+          severity: critical
+        annotations:
+          summary: "High anomaly rate detected by AIOps"
+          description: "{{ $value }} anomalies detected in the last 30 minutes. Possible incident in progress."

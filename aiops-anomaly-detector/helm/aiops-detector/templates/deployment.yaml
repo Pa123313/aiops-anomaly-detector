@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "aiops-detector.fullname" . }}
+  labels:
+    {{- include "aiops-detector.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "aiops-detector.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+      labels:
+        {{- include "aiops-detector.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+      containers:
+        - name: aiops-detector
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: metrics
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: LOKI_URL
+              value: {{ .Values.config.lokiUrl | quote }}
+            - name: OLLAMA_URL
+              value: {{ .Values.config.ollamaUrl | quote }}
+            - name: OLLAMA_MODEL
+              value: {{ .Values.config.ollamaModel | quote }}
+            - name: ALERTMANAGER_URL
+              value: {{ .Values.config.alertmanagerUrl | quote }}
+            - name: SCAN_INTERVAL
+              value: {{ .Values.config.scanInterval | quote }}
+            - name: LOG_LOOKBACK
+              value: {{ .Values.config.logLookback | quote }}
+            - name: LOKI_QUERY
+              value: {{ .Values.config.lokiQuery | quote }}
+            - name: ANOMALY_THRESHOLD
+              value: {{ .Values.config.anomalyThreshold | quote }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
