@@ -27,13 +27,13 @@ Production-grade AIOps system that automatically detects anomalies in Kubernetes
 ## 📸 Live Demo — Running on AWS EC2
 
 ### ✅ All 6 Containers Running Healthy
-![docker-ps](https://github.com/Pa123313/aiops-anomaly-detector/blob/main/docs/screenshots/docker-ps.png?raw=true)
+![docker-ps](https://github.com/Pa123313/aiops-anomaly-detector/blob/main/aiops-anomaly-detector/docs/screenshots/docker-ps.png?raw=true)
 
 ### 🚨 Alertmanager — AIOpsAnomalyDetected Alert Fired
-![alertmanager](https://github.com/Pa123313/aiops-anomaly-detector/blob/main/docs/screenshots/alertmanager-alert.png?raw=true)
+![alertmanager](https://github.com/Pa123313/aiops-anomaly-detector/blob/main/aiops-anomaly-detector/docs/screenshots/alertmanager-alert.png?raw=true)
 
 ### 📊 Prometheus — aiops_anomalies_detected_total = 1
-![prometheus](https://github.com/Pa123313/aiops-anomaly-detector/blob/main/docs/screenshots/prometheus-metrics.png?raw=true)
+![prometheus](https://github.com/Pa123313/aiops-anomaly-detector/blob/main/aiops-anomaly-detector/docs/screenshots/prometheus-metrics.png?raw=true)
 
 ---
 
