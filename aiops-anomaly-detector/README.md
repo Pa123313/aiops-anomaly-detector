@@ -8,7 +8,6 @@ Automatically fetches logs from **Grafana Loki**, analyzes them with a **local L
 
 ## Architecture
 
-```
 ┌──────────────────────────────────────────────────────────────────┐
 │  Kubernetes Cluster                                               │
 │                                                                  │
